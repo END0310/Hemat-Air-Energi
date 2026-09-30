@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/app_colors.dart';
+import 'routes/app_routes.dart';
 import 'screens/splash_screen.dart';
 
 void main() {
@@ -34,6 +35,8 @@ class HematAirEnergiApp extends StatelessWidget {
         highlightColor: Colors.transparent,
       ),
       home: const SplashScreen(),
+      onGenerateRoute: AppRoutes.onGenerateRoute,
+      onUnknownRoute: AppRoutes.onUnknownRoute,
     );
   }
 }

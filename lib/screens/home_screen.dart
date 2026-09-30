@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../data/consumption_repository.dart';
 import '../core/app_colors.dart';
 import '../core/app_text_styles.dart';
+import '../models/consumption_item.dart';
+import '../routes/app_routes.dart';
+import '../utils/validators.dart';
+import '../widgets/state_views.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -162,7 +167,7 @@ class _IconButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: AppColors.bluePastelLight.withOpacity(0.5),
+          color: AppColors.bluePastelLight.withValues(alpha: 0.5),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, size: 20, color: AppColors.primaryBlue),
@@ -180,7 +185,7 @@ class _AvatarButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.bluePastelLight,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3), width: 1.5),
       ),
       child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20),
     );
@@ -209,11 +214,11 @@ class _GreetingRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.greenMint.withOpacity(0.4),
+            color: AppColors.greenMint.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(9999),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 2,
                   offset: const Offset(0, 1))
             ],
@@ -265,7 +270,7 @@ class _WeeklySnapshotCards extends StatelessWidget {
             trendUp: false,
             trendPercent: '12%',
             trendLabel: 'vs mgg lalu',
-            glowColor: AppColors.bluePastel.withOpacity(0.3),
+            glowColor: AppColors.bluePastel.withValues(alpha: 0.3),
             accentColor: AppColors.primaryBlue,
             badgeBg: AppColors.bluePastelMed,
           ),
@@ -275,7 +280,7 @@ class _WeeklySnapshotCards extends StatelessWidget {
           child: _MetricCard(
             sdgLabel: 'SDG 7',
             sdgColor: AppColors.amber,
-            sdgBgColor: AppColors.amberPastel.withOpacity(0.6),
+            sdgBgColor: AppColors.amberPastel.withValues(alpha: 0.6),
             iconBg: AppColors.amberPastel,
             iconColor: AppColors.amber,
             iconData: Icons.bolt,
@@ -285,9 +290,9 @@ class _WeeklySnapshotCards extends StatelessWidget {
             trendUp: true,
             trendPercent: '4%',
             trendLabel: 'vs mgg lalu',
-            glowColor: AppColors.amberPastel.withOpacity(0.4),
+            glowColor: AppColors.amberPastel.withValues(alpha: 0.4),
             accentColor: AppColors.amber,
-            badgeBg: AppColors.amberPastel.withOpacity(0.6),
+            badgeBg: AppColors.amberPastel.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -339,13 +344,13 @@ class _MetricCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withOpacity(0.08),
+            color: accentColor.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
             spreadRadius: -4,
           ),
           BoxShadow(
-            color: AppColors.textDark.withOpacity(0.04),
+            color: AppColors.textDark.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
             spreadRadius: -1,
@@ -382,7 +387,7 @@ class _MetricCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 2,
                           offset: const Offset(0, 1),
                         )
@@ -441,8 +446,8 @@ class _MetricCard extends StatelessWidget {
                         horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: trendUp
-                          ? AppColors.amberPastel.withOpacity(0.5)
-                          : AppColors.greenMint.withOpacity(0.4),
+                          ? AppColors.amberPastel.withValues(alpha: 0.5)
+                          : AppColors.greenMint.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(9999),
                     ),
                     child: Row(
@@ -535,13 +540,13 @@ class _MonthlyTargetSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryBlue.withOpacity(0.06),
+                color: AppColors.primaryBlue.withValues(alpha: 0.06),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
                 spreadRadius: -4,
               ),
               BoxShadow(
-                color: AppColors.textDark.withOpacity(0.03),
+                color: AppColors.textDark.withValues(alpha: 0.03),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
                 spreadRadius: -1,
@@ -573,7 +578,7 @@ class _MonthlyTargetSection extends StatelessWidget {
                 iconColor: AppColors.primaryGreen,
                 label: 'Konsumsi Listrik: 65 / 100 kWh',
                 badgeLabel: '65%',
-                badgeBg: AppColors.greenMint.withOpacity(0.5),
+                badgeBg: AppColors.greenMint.withValues(alpha: 0.5),
                 badgeText: AppColors.primaryGreen,
                 progress: 0.65,
                 progressColor: AppColors.primaryGreen,
@@ -677,7 +682,7 @@ class _GoalProgressRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(9999),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 2,
                         offset: const Offset(0, 1),
                       )
@@ -762,7 +767,7 @@ class _RoommateSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryBlue.withOpacity(0.06),
+                color: AppColors.primaryBlue.withValues(alpha: 0.06),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
                 spreadRadius: -4,
@@ -864,7 +869,7 @@ class _TipCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withOpacity(0.05),
+            color: AppColors.primaryBlue.withValues(alpha: 0.05),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -877,7 +882,7 @@ class _TipCard extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.primaryBlue.withOpacity(0.12),
+              color: AppColors.primaryBlue.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.lightbulb_outline,
@@ -911,7 +916,7 @@ class _TipCard extends StatelessWidget {
           GestureDetector(
             onTap: onDismiss,
             child: Icon(Icons.close,
-                size: 18, color: AppColors.textMedium.withOpacity(0.6)),
+                size: 18, color: AppColors.textMedium.withValues(alpha: 0.6)),
           ),
         ],
       ),
@@ -945,7 +950,7 @@ class _ActivitySection extends StatelessWidget {
       ),
       _ActivityItem(
         icon: Icons.battery_charging_full,
-        iconBg: AppColors.greenMint.withOpacity(0.3),
+        iconBg: AppColors.greenMint.withValues(alpha: 0.3),
         iconColor: AppColors.primaryGreen,
         title: 'Hemat Listrik AC Mati',
         subtitle: '21 Okt, 22:00 • -2.5 kWh',
@@ -1004,7 +1009,7 @@ class _ActivityItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textDark.withOpacity(0.03),
+            color: AppColors.textDark.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1071,7 +1076,7 @@ class _AppBottomNavBar extends StatelessWidget {
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -1098,7 +1103,7 @@ class _AppBottomNavBar extends StatelessWidget {
                       horizontal: 14, vertical: 8),
                   decoration: selected
                       ? BoxDecoration(
-                          color: AppColors.primaryBlue.withOpacity(0.1),
+                          color: AppColors.primaryBlue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         )
                       : null,
@@ -1145,16 +1150,106 @@ class _NavItem {
 
 // ─── Other Tabs (Stubs) ───────────────────────────────────────────────────────
 
-class _CatatanTab extends StatelessWidget {
+enum _CatatanStatus { loading, success, error }
+
+class _CatatanTab extends StatefulWidget {
   const _CatatanTab();
 
   @override
+  State<_CatatanTab> createState() => _CatatanTabState();
+}
+
+class _CatatanTabState extends State<_CatatanTab> {
+  final _repository = ConsumptionRepository();
+  _CatatanStatus _status = _CatatanStatus.loading;
+  List<ConsumptionItem> _items = [];
+  String _errorMessage = '';
+  late bool _simulateError;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _simulateError = false;
+    _loadItems();
+  }
+
+  Future<void> _loadItems() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _status = _CatatanStatus.loading;
+      });
+    }
+    try {
+      final items = await _repository.fetchItems(simulateError: _simulateError);
+      if (!mounted) return;
+      setState(() {
+        _items = items;
+        _status = _CatatanStatus.success;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = error.toString().replaceFirst('Exception: ', '');
+        _status = _CatatanStatus.error;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return _PlaceholderTab(
-      icon: Icons.edit_note_rounded,
-      color: AppColors.primaryBlue,
-      title: 'Catatan Penggunaan',
-      subtitle: 'Riwayat pencatatan air & listrik kamu.',
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('Catatan Penggunaan')),
+      body: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) return const LoadingView();
+    return switch (_status) {
+      _CatatanStatus.loading => const LoadingView(),
+      _CatatanStatus.error => ErrorView(
+          message: _errorMessage,
+          onRetry: _loadItems,
+        ),
+      _CatatanStatus.success => _buildList(),
+    };
+  }
+
+  Widget _buildList() {
+    if (_items.isEmpty) {
+      return const EmptyView(message: 'Belum ada data pemakaian.');
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _items.length,
+      itemBuilder: (context, index) {
+        final item = _items[index];
+        return Card(
+          child: ListTile(
+            leading: Icon(
+              item.type == 'Air' ? Icons.water_drop : Icons.bolt,
+              color: item.type == 'Air'
+                  ? AppColors.primaryBlue
+                  : AppColors.amber,
+            ),
+            title: Text(item.title),
+            subtitle: Text(item.subtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.pushNamed(
+              context,
+              AppRoutes.detail,
+              arguments: item,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -1211,7 +1306,7 @@ class _PlaceholderTab extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 36),
@@ -1243,6 +1338,7 @@ class _CatatBottomSheet extends StatefulWidget {
 
 class _CatatBottomSheetState extends State<_CatatBottomSheet> {
   int _selectedType = 0; // 0=Air, 1=Listrik
+  final _formKey = GlobalKey<FormState>();
   final _controller = TextEditingController();
 
   @override
@@ -1308,47 +1404,63 @@ class _CatatBottomSheetState extends State<_CatatBottomSheet> {
             ],
           ),
           const SizedBox(height: 16),
-          // Input
-          TextField(
-            controller: _controller,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              hintText: _selectedType == 0 ? 'Jumlah (Liter)' : 'Jumlah (kWh)',
-              filled: true,
-              fillColor: AppColors.blueBackground,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-              suffixText: _selectedType == 0 ? 'L' : 'kWh',
-              suffixStyle: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w700,
-                color: _selectedType == 0
-                    ? AppColors.primaryBlue
-                    : AppColors.amber,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _selectedType == 0
-                    ? AppColors.primaryBlue
-                    : AppColors.amber,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-              ),
-              onPressed: () => Navigator.pop(context),
-              child: Text('Simpan',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  )),
+          Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _controller,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: _selectedType == 0
+                        ? 'Jumlah (Liter)'
+                        : 'Jumlah (kWh)',
+                    filled: true,
+                    fillColor: AppColors.blueBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixText: _selectedType == 0 ? 'L' : 'kWh',
+                    suffixStyle: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      color: _selectedType == 0
+                          ? AppColors.primaryBlue
+                          : AppColors.amber,
+                    ),
+                  ),
+                  validator: (value) => Validators.positiveNumber(
+                    value,
+                    fieldName: _selectedType == 0 ? 'Liter' : 'kWh',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _selectedType == 0
+                          ? AppColors.primaryBlue
+                          : AppColors.amber,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState?.validate() ?? false) {
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text('Simpan',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        )),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
