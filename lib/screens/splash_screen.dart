@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../core/app_text_styles.dart';
-import 'home_screen.dart';
+import '../routes/app_routes.dart'; // gunakan named route
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -60,16 +60,8 @@ class _SplashScreenState extends State<SplashScreen>
 
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (_, _, _) => const HomeScreen(),
-            transitionsBuilder: (_, anim, _, child) => FadeTransition(
-              opacity: anim,
-              child: child,
-            ),
-            transitionDuration: const Duration(milliseconds: 500),
-          ),
-        );
+        // Navigasi ke LoginScreen, bukan langsung HomeScreen
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     });
   }
@@ -102,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 288,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.greenMint.withOpacity(0.2),
+                  color: AppColors.greenMint.withValues(alpha: 0.2),
                 ),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
@@ -119,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 320,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.bluePastel.withOpacity(0.2),
+                  color: AppColors.bluePastel.withValues(alpha: 0.2),
                 ),
               ),
             ),
@@ -197,11 +189,11 @@ class _SdgBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(9999),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 2,
             offset: const Offset(0, 1),
           ),
@@ -251,7 +243,7 @@ class _LogoWidget extends StatelessWidget {
             height: 180,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha: 0.25),
             ),
           ),
           // Glass card container
@@ -264,10 +256,10 @@ class _LogoWidget extends StatelessWidget {
                 height: 144,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 25,
                       offset: const Offset(0, 20),
                     ),
@@ -311,7 +303,7 @@ class _LogoPainter extends CustomPainter {
 
     // Lightning bolt
     final boltPaint = Paint()
-      ..color = Colors.white.withOpacity(0.95)
+      ..color = Colors.white.withValues(alpha: 0.95)
       ..style = PaintingStyle.fill;
 
     final boltPath = Path();
@@ -337,7 +329,7 @@ class _SdgPillBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(9999),
       ),
       child: Row(
@@ -358,7 +350,7 @@ class _SdgPillBadge extends StatelessWidget {
             '•',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 10,
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(width: 6),
@@ -452,13 +444,13 @@ class _LoadingArcPainter extends CustomPainter {
     final radius = math.min(cx, cy) - 2;
 
     final bgPaint = Paint()
-      ..color = Colors.white.withOpacity(0.25)
+      ..color = Colors.white.withValues(alpha: 0.25)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
     canvas.drawCircle(Offset(cx, cy), radius, bgPaint);
 
     final arcPaint = Paint()
-      ..color = Colors.white.withOpacity(0.9)
+      ..color = Colors.white.withValues(alpha: 0.9)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round;

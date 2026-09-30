@@ -46,9 +46,10 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
-.PRD_HematEnergi_Kelompok12.pdf
-.pdf
-.docx
-.pptx
+
+
+*.pdf
+*.docx
+*.pptx
 .txt
-.zip
+*.zip

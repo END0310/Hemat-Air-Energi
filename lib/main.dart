@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/app_colors.dart';
-import 'screens/splash_screen.dart';
+import 'routes/app_routes.dart'; // generator route terpusat
+import 'screens/not_found_screen.dart'; // untuk onUnknownRoute
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +34,13 @@ class HematAirEnergiApp extends StatelessWidget {
         splashFactory: NoSplash.splashFactory,
         highlightColor: Colors.transparent,
       ),
-      home: const SplashScreen(),
+      initialRoute: AppRoutes.login,        // route awal: LoginScreen (sesuai Modul Langkah 6 & 9)
+      onGenerateRoute: onGenerateRoute,      // semua named route lewat sini
+      onUnknownRoute: (settings) =>          // fallback jika route tidak dikenal
+          MaterialPageRoute<void>(
+            builder: (_) => NotFoundScreen(routeName: settings.name),
+          ),
+
     );
   }
 }

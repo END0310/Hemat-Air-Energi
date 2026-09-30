@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../core/app_text_styles.dart';
+import '../models/penggunaan_energi.dart';           // (1) model data
+import '../data/penggunaan_energi_repository.dart'; // (1) sumber data
+import '../widgets/state_views.dart';               // (1) widget status tampilan
+import '../routes/app_routes.dart';                 // (3) untuk navigasi ke detail
+
+// (1) Enum ViewStatus – bedakan kondisi loading, data ada, kosong, error
+enum ViewStatus { loading, success, empty, error }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +21,42 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   bool _tipDismissed = false;
 
+  // (2) Variabel state – status tampilan, daftar item, dan pesan error
+  ViewStatus _status = ViewStatus.loading;
+  List<PenggunaanEnergi> _items = [];
+  String _errorMessage = '';
+  // Ubah ke true untuk menguji error state (Langkah 9 No. 4)
+  // ignore: prefer_final_fields
+  bool _simulateError = false;
+
+  // (3) initState – panggil _loadItems saat widget pertama kali dibuat
+  @override
+  void initState() {
+    super.initState();
+    _loadItems(); // (3)
+  }
+
+  // (4) _loadItems – ambil data dari repository secara async
+  Future<void> _loadItems() async {
+    setState(() => _status = ViewStatus.loading);
+    try {
+      final data = await PenggunaanEnergiRepository.instance.getAll(
+        simulateError: _simulateError,
+      );
+      if (!mounted) return; // cek mounted setelah await (ketentuan poin 4)
+      setState(() {
+        _items = data.toList();
+        _status = _items.isEmpty ? ViewStatus.empty : ViewStatus.success;
+      });
+    } catch (e) {
+      if (!mounted) return; // cek mounted sebelum setState (ketentuan poin 4)
+      setState(() {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _status = ViewStatus.error;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,6 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
           _DashboardTab(
             tipDismissed: _tipDismissed,
             onDismissTip: () => setState(() => _tipDismissed = true),
+            status: _status,              // (2) teruskan status ke tab
+            items: _items,                // (2) teruskan data ke tab
+            errorMessage: _errorMessage,  // (2) teruskan pesan error
+            onRetry: _loadItems,          // teruskan fungsi muat ulang
           ),
           const _CatatanTab(),
           const _TargetTab(),
@@ -69,8 +116,20 @@ class _HomeScreenState extends State<HomeScreen> {
 class _DashboardTab extends StatelessWidget {
   final bool tipDismissed;
   final VoidCallback onDismissTip;
-  const _DashboardTab(
-      {required this.tipDismissed, required this.onDismissTip});
+  // (2) Parameter baru untuk status tampilan dan data
+  final ViewStatus status;
+  final List<PenggunaanEnergi> items;
+  final String errorMessage;
+  final VoidCallback onRetry;
+
+  const _DashboardTab({
+    required this.tipDismissed,
+    required this.onDismissTip,
+    required this.status,       // (2)
+    required this.items,        // (2)
+    required this.errorMessage, // (2)
+    required this.onRetry,      // (2)
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +141,21 @@ class _DashboardTab extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
+              const SizedBox(height: 12),
+              // ── UJI ROUTE 404 SEMENTARA (Langkah 9 No. 7 — Hapus setelah diuji) ──
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pushNamed(context, '/tidak-ada'),
+                icon: const Icon(Icons.bug_report, color: Colors.deepOrange),
+                label: const Text('Uji Route 404 (/tidak-ada)'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.deepOrange,
+                  side: const BorderSide(color: Colors.deepOrange, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               // Greeting row
               _GreetingRow(),
@@ -98,13 +172,35 @@ class _DashboardTab extends StatelessWidget {
               // Tip card
               if (!tipDismissed) _TipCard(onDismiss: onDismissTip),
               if (!tipDismissed) const SizedBox(height: 24),
-              // Activity
-              _ActivitySection(),
+              // (5) Ganti hardcode dengan _buildContent()
+              _buildContent(),
             ]),
           ),
         ),
       ],
     );
+  }
+
+  // (6) _buildContent – pilih tampilan sesuai ViewStatus
+  Widget _buildContent() {
+    switch (status) {
+      case ViewStatus.loading:
+        return const LoadingView();
+      case ViewStatus.empty:
+        return const EmptyView(
+          icon: Icons.edit_note_rounded,
+          message: 'Belum ada catatan penggunaan.\nTambahkan dengan tombol "Catat Penggunaan".',
+        );
+      case ViewStatus.error:
+        return ErrorView(message: errorMessage, onRetry: onRetry);
+      case ViewStatus.success:
+        return _buildList();
+    }
+  }
+
+  // (6) _buildList – tampilkan daftar item dari repository
+  Widget _buildList() {
+    return _ActivitySection(items: items);
   }
 }
 
@@ -162,7 +258,7 @@ class _IconButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: AppColors.bluePastelLight.withOpacity(0.5),
+          color: AppColors.bluePastelLight.withValues(alpha: 0.5),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, size: 20, color: AppColors.primaryBlue),
@@ -180,7 +276,7 @@ class _AvatarButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.bluePastelLight,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3), width: 1.5),
       ),
       child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20),
     );
@@ -209,11 +305,11 @@ class _GreetingRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.greenMint.withOpacity(0.4),
+            color: AppColors.greenMint.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(9999),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 2,
                   offset: const Offset(0, 1))
             ],
@@ -265,7 +361,7 @@ class _WeeklySnapshotCards extends StatelessWidget {
             trendUp: false,
             trendPercent: '12%',
             trendLabel: 'vs mgg lalu',
-            glowColor: AppColors.bluePastel.withOpacity(0.3),
+            glowColor: AppColors.bluePastel.withValues(alpha: 0.3),
             accentColor: AppColors.primaryBlue,
             badgeBg: AppColors.bluePastelMed,
           ),
@@ -275,7 +371,7 @@ class _WeeklySnapshotCards extends StatelessWidget {
           child: _MetricCard(
             sdgLabel: 'SDG 7',
             sdgColor: AppColors.amber,
-            sdgBgColor: AppColors.amberPastel.withOpacity(0.6),
+            sdgBgColor: AppColors.amberPastel.withValues(alpha: 0.6),
             iconBg: AppColors.amberPastel,
             iconColor: AppColors.amber,
             iconData: Icons.bolt,
@@ -285,9 +381,9 @@ class _WeeklySnapshotCards extends StatelessWidget {
             trendUp: true,
             trendPercent: '4%',
             trendLabel: 'vs mgg lalu',
-            glowColor: AppColors.amberPastel.withOpacity(0.4),
+            glowColor: AppColors.amberPastel.withValues(alpha: 0.4),
             accentColor: AppColors.amber,
-            badgeBg: AppColors.amberPastel.withOpacity(0.6),
+            badgeBg: AppColors.amberPastel.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -339,13 +435,13 @@ class _MetricCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withOpacity(0.08),
+            color: accentColor.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
             spreadRadius: -4,
           ),
           BoxShadow(
-            color: AppColors.textDark.withOpacity(0.04),
+            color: AppColors.textDark.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
             spreadRadius: -1,
@@ -382,7 +478,7 @@ class _MetricCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 2,
                           offset: const Offset(0, 1),
                         )
@@ -441,8 +537,8 @@ class _MetricCard extends StatelessWidget {
                         horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: trendUp
-                          ? AppColors.amberPastel.withOpacity(0.5)
-                          : AppColors.greenMint.withOpacity(0.4),
+                          ? AppColors.amberPastel.withValues(alpha: 0.5)
+                          : AppColors.greenMint.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(9999),
                     ),
                     child: Row(
@@ -535,13 +631,13 @@ class _MonthlyTargetSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryBlue.withOpacity(0.06),
+                color: AppColors.primaryBlue.withValues(alpha: 0.06),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
                 spreadRadius: -4,
               ),
               BoxShadow(
-                color: AppColors.textDark.withOpacity(0.03),
+                color: AppColors.textDark.withValues(alpha: 0.03),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
                 spreadRadius: -1,
@@ -573,7 +669,7 @@ class _MonthlyTargetSection extends StatelessWidget {
                 iconColor: AppColors.primaryGreen,
                 label: 'Konsumsi Listrik: 65 / 100 kWh',
                 badgeLabel: '65%',
-                badgeBg: AppColors.greenMint.withOpacity(0.5),
+                badgeBg: AppColors.greenMint.withValues(alpha: 0.5),
                 badgeText: AppColors.primaryGreen,
                 progress: 0.65,
                 progressColor: AppColors.primaryGreen,
@@ -677,7 +773,7 @@ class _GoalProgressRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(9999),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 2,
                         offset: const Offset(0, 1),
                       )
@@ -762,7 +858,7 @@ class _RoommateSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryBlue.withOpacity(0.06),
+                color: AppColors.primaryBlue.withValues(alpha: 0.06),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
                 spreadRadius: -4,
@@ -864,7 +960,7 @@ class _TipCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withOpacity(0.05),
+            color: AppColors.primaryBlue.withValues(alpha: 0.05),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -877,7 +973,7 @@ class _TipCard extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.primaryBlue.withOpacity(0.12),
+              color: AppColors.primaryBlue.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.lightbulb_outline,
@@ -911,7 +1007,7 @@ class _TipCard extends StatelessWidget {
           GestureDetector(
             onTap: onDismiss,
             child: Icon(Icons.close,
-                size: 18, color: AppColors.textMedium.withOpacity(0.6)),
+                size: 18, color: AppColors.textMedium.withValues(alpha: 0.6)),
           ),
         ],
       ),
@@ -922,38 +1018,21 @@ class _TipCard extends StatelessWidget {
 // ─── Activity Section ─────────────────────────────────────────────────────────
 
 class _ActivitySection extends StatelessWidget {
+  // (6) Terima data dari repository, bukan hardcode
+  final List<PenggunaanEnergi> items;
+  const _ActivitySection({required this.items});
+
+  // Helper: singkatan nama bulan dalam bahasa Indonesia
+  static String _bulanSingkat(int month) {
+    const bulan = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    ];
+    return bulan[month];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final activities = [
-      _ActivityItem(
-        icon: Icons.electric_bolt,
-        iconBg: AppColors.amberPastel,
-        iconColor: AppColors.amber,
-        title: 'Beli Token Listrik Kos',
-        subtitle: 'Kemarin, 19:30 • +50.0 kWh',
-        amount: 'Rp 82.500',
-        amountColor: AppColors.amber,
-      ),
-      _ActivityItem(
-        icon: Icons.water_drop,
-        iconBg: AppColors.bluePastel,
-        iconColor: AppColors.primaryBlue,
-        title: 'Catat Meteran Air Mandi',
-        subtitle: '22 Okt, 07:15 • Kamar 10',
-        amount: '+12 L',
-        amountColor: AppColors.primaryBlue,
-      ),
-      _ActivityItem(
-        icon: Icons.battery_charging_full,
-        iconBg: AppColors.greenMint.withOpacity(0.3),
-        iconColor: AppColors.primaryGreen,
-        title: 'Hemat Listrik AC Mati',
-        subtitle: '21 Okt, 22:00 • -2.5 kWh',
-        amount: '-2.5 kWh',
-        amountColor: AppColors.primaryGreen,
-      ),
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -965,12 +1044,38 @@ class _ActivitySection extends StatelessWidget {
               letterSpacing: 0.8,
             )),
         const SizedBox(height: 10),
-        ...activities
-            .map((a) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: a,
-                ))
-            ,
+        // (6) Buat _ActivityItem dari data model, bukan hardcode
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _ActivityItem(
+              icon: item.jenis == JenisEnergi.air
+                  ? Icons.water_drop
+                  : Icons.electric_bolt,
+              iconBg: item.jenis == JenisEnergi.air
+                  ? AppColors.bluePastel
+                  : AppColors.amberPastel,
+              iconColor: item.jenis == JenisEnergi.air
+                  ? AppColors.primaryBlue
+                  : AppColors.amber,
+              title: item.keterangan,
+              subtitle:
+                  '${item.tanggal.day} ${_bulanSingkat(item.tanggal.month)}, '
+                  '${item.tanggal.hour.toString().padLeft(2, '0')}:'
+                  '${item.tanggal.minute.toString().padLeft(2, '0')} '
+                  '• ${item.nomorKamar}',
+              amount: '${item.jumlah} ${item.satuan}',
+              amountColor: item.jenis == JenisEnergi.air
+                  ? AppColors.primaryBlue
+                  : AppColors.amber,
+              onTap: () => Navigator.pushNamed( // (3) navigasi ke detail
+                context,
+                AppRoutes.detail,
+                arguments: item, // kirim item sebagai argument
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -984,6 +1089,7 @@ class _ActivityItem extends StatelessWidget {
   final String subtitle;
   final String amount;
   final Color amountColor;
+  final VoidCallback? onTap; // (7) siap untuk navigasi di Langkah 7
 
   const _ActivityItem({
     required this.icon,
@@ -993,57 +1099,61 @@ class _ActivityItem extends StatelessWidget {
     required this.subtitle,
     required this.amount,
     required this.amountColor,
+    this.onTap, // opsional, diisi di Langkah 7
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textDark.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textDark,
-                    )),
-                Text(subtitle,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      color: AppColors.textMedium,
-                    )),
-              ],
+    return GestureDetector(  // bungkus dengan GestureDetector agar onTap aktif
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textDark.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-          Text(amount,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: amountColor,
-              )),
-        ],
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      )),
+                  Text(subtitle,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: AppColors.textMedium,
+                      )),
+                ],
+              ),
+            ),
+            Text(amount,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: amountColor,
+                )),
+          ],
+        ),
       ),
     );
   }
@@ -1071,7 +1181,7 @@ class _AppBottomNavBar extends StatelessWidget {
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -1098,7 +1208,7 @@ class _AppBottomNavBar extends StatelessWidget {
                       horizontal: 14, vertical: 8),
                   decoration: selected
                       ? BoxDecoration(
-                          color: AppColors.primaryBlue.withOpacity(0.1),
+                          color: AppColors.primaryBlue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         )
                       : null,
@@ -1211,7 +1321,7 @@ class _PlaceholderTab extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 36),
