@@ -1,42 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'core/app_colors.dart';
-import 'routes/app_routes.dart';
-import 'screens/splash_screen.dart';
+import 'screens/device_list_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark,
-  ));
-  runApp(const HematAirEnergiApp());
+  runApp(const HematEnergiApp());
 }
 
-class HematAirEnergiApp extends StatelessWidget {
-  const HematAirEnergiApp({super.key});
+class HematEnergiApp extends StatelessWidget {
+  const HematEnergiApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Hemat Air & Energi',
+      title: 'Hemat Energi',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        scaffoldBackgroundColor: AppColors.surface,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primaryBlue,
-          brightness: Brightness.light,
+          seedColor: AppColors.primaryGreen,
+          primary: AppColors.primaryGreen,
+          surface: AppColors.surface,
+          error: AppColors.errorRed,
         ),
-        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
-        scaffoldBackgroundColor: AppColors.background,
-        splashFactory: NoSplash.splashFactory,
-        highlightColor: Colors.transparent,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.primaryGreen,
+          foregroundColor: Colors.white,
+          centerTitle: true,
+        ),
       ),
-      home: const SplashScreen(),
-      onGenerateRoute: AppRoutes.onGenerateRoute,
-      onUnknownRoute: AppRoutes.onUnknownRoute,
+      home: const DeviceListScreen(),
     );
   }
 }
