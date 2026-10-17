@@ -5,6 +5,8 @@ import '../core/app_colors.dart';
 import '../data/database_helper.dart';
 import '../models/device_models.dart';
 import 'add_device_screen.dart';
+import 'calculator_screen.dart';
+import 'device_analysis_screen.dart';
 import 'device_detail_screen.dart';
 
 class DeviceListScreen extends StatefulWidget {
@@ -182,6 +184,28 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calculate_outlined),
+            tooltip: 'Kalkulator kWh (FR-06)',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CalculatorScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.analytics_outlined),
+            tooltip: 'Analisis Perangkat (FR-08)',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DeviceAnalysisScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: _buildBody(),
       floatingActionButton: FloatingActionButton.extended(

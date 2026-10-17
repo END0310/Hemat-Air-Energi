@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'core/app_colors.dart';
-import 'screens/device_list_screen.dart';
+import 'screens/main_navigation_screen.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.instance.initialize();
   runApp(const HematEnergiApp());
 }
 
@@ -30,7 +32,7 @@ class HematEnergiApp extends StatelessWidget {
           centerTitle: true,
         ),
       ),
-      home: const DeviceListScreen(),
+      home: const MainNavigationScreen(),
     );
   }
 }
